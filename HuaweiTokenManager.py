@@ -1,6 +1,5 @@
 import requests
 from datetime import datetime, timezone, timedelta
-
 def getNewToken():
     url = "https://iam.ap-southeast-1.myhuaweicloud.com/v3/auth/tokens"
     body = { 

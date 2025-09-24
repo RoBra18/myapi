@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from descriptor import describir_entorno, only_chat, leer_OCR
-from getObjects import detectar_objetos_str
-from getOCRText import detectCharacters
+#from getObjects import detectar_objetos_str
+from getOCRText import detectCharacters, detectHuaweiObjects
 from SMTPGmailSenderService import SMTPGmailSenderService
 from HuaweiTokenManager import is_token_valid, getNewToken
 import shutil
@@ -46,14 +46,23 @@ async def detect_objects(file: UploadFile = File(...), description: str = Form("
             shutil.copyfileobj(file.file, buffer)
 
         # Procesar imagen
-        objetos_str = detectar_objetos_str(filepath)
-        #descr = get_Short_description(filepath)
-        geratedDescription = describir_entorno(objetos_str, description)
+       # objetos_str = detectar_objetos_str(filepath)
+        if is_token_valid(expires_at) == False:
+            (token, expires_at)= getNewToken()
+        if(token != 0):
 
-        # Eliminar imagen temporal
-        os.remove(filepath)
+            objetos_str = detectHuaweiObjects(filepath, token)
+            #descr = get_Short_description(filepath)
+            geratedDescription = describir_entorno(objetos_str, description)
 
-        return {"descripcion":geratedDescription}
+            os.remove(filepath)
+
+            return {"descripcion":geratedDescription}
+        else:
+            os.remove(filepath)
+            return {"descripcion":"I couldn't do it"}
+
+
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")

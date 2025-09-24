@@ -1,3 +1,4 @@
+'''
 from ultralytics import YOLO
 from PIL import Image
 
@@ -24,3 +25,4 @@ def detectar_objetos_str(ruta_imagen: str) -> str:
         descripcion = "No se detectaron objetos en la escena"
     
     return descripcion
+'''
