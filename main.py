@@ -39,6 +39,7 @@ async def return_description( description: str = ""):
 
 @app.post("/detect_objects")
 async def detect_objects(file: UploadFile = File(...), description: str = Form("")):
+    global token, expires_at
     try:
         print(description)
         # Guardar archivo temporal
