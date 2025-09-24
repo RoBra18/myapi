@@ -16,6 +16,10 @@ app = FastAPI()
 sender = SMTPGmailSenderService()
 
 
+@app.get("/")
+def root():
+    return {"message": "API is running 🚀"}
+
 @app.post("/wantDescription")
 async def return_description( description: str = ""):
     try:
