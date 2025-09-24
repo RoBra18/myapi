@@ -45,34 +45,59 @@ def detectCharacters (rutaImagen, token):
 
 
 
-
-def detectHuaweiObjects (rutaImagen, token):
-     #image = Image.open(ruta_imagen)
-     #imagepath = r'https://i.ibb.co/HLt9rxBX/image.png'
-
+def detectHuaweiObjects(rutaImagen, token):
     headers = {'Content-Type': 'application/json', 'X-Auth-Token': token}
+    max_lado = 4096  # límite Huawei
+
     try:
+        # --- 1. Abrir imagen y validar tamaño ---
+        with Image.open(rutaImagen) as img:
+            ancho, alto = img.size
+            formato = img.format  # p.ej. "PNG", "JPEG"
+            print(f"📷 Imagen original → Formato: {formato}, Ancho: {ancho}px, Alto: {alto}px")
+
+            # --- 2. Redimensionar si es necesario ---
+            if ancho > max_lado or alto > max_lado:
+                factor = max_lado / max(ancho, alto)
+                nuevo_ancho = int(ancho * factor)
+                nuevo_alto = int(alto * factor)
+                img = img.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+
+                # Guardamos la versión redimensionada en un archivo temporal
+                ruta_temp = rutaImagen.replace(".", "_resized.")
+                img.save(ruta_temp, format="JPEG", quality=95)
+                rutaImagen = ruta_temp
+                print(f"✅ Redimensionada a {nuevo_ancho}x{nuevo_alto}")
+            else:
+                print("✅ No necesita redimensionado.")
+
+        # --- 3. Convertir a Base64 ---
         with open(rutaImagen, "rb") as bin_data:
             image_data = bin_data.read()
-        image_base64 = base64.b64encode(image_data).decode("utf-8")  # Use Base64 encoding of images.
-        
-        data= {
+        image_base64 = base64.b64encode(image_data).decode("utf-8")
+
+        # --- 4. Construir payload y enviar ---
+        data = {
             "image": image_base64,
-          "language":"en"
-            }  # Set either the URL or the image.
+            "language": "en"
+        }
 
         response = requests.post(urlImage, headers=headers, json=data, verify=False)
         response.raise_for_status()
-        if(response.status_code == 200 or response.status_code == 201):
+
+        if response.status_code in (200, 201):
             print(response.text)
             result = summarize_tags_with_limit(response.text)
             return result
         else:
             return "Without results"
-    except:
-        return "Error detecting Image Scene"
 
-
+    except requests.exceptions.RequestException as e:
+        print("❌ Request failed:", e)
+        return f"Request error: {str(e)}"
+    except Exception as e:
+        print("❌ Unexpected error:", e)
+        return f"Unexpected error: {str(e)}"
 
 
 
